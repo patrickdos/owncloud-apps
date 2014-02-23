@@ -73,30 +73,7 @@ class OC_USER_SAML_Hooks {
 					OC_Log::write('saml','Using default group "'.$samlBackend->defaultGroup.'" for the user: '.$uid, OC_Log::DEBUG);
 				}
 
-				if (!OC_User::userExists($uid)) {
-					if (preg_match( '/[^a-zA-Z0-9 _\.@\-]/', $uid)) {
-						OC_Log::write('saml','Invalid username "'.$uid.'", allowed chars "a-zA-Z0-9" and "_.@-" ',OC_Log::DEBUG);
-						return false;
-					}
-					else {
-						$random_password = OC_Util::generate_random_bytes(20);
-						OC_Log::write('saml','Creating new user: '.$uid, OC_Log::DEBUG);
-						OC_User::createUser($uid, $random_password);
-						if(OC_User::userExists($uid)) {
-							OC_Util::setupFS($uid);
-							if (isset($saml_email)) {
-								update_mail($uid, $saml_email);
-							}
-							if (isset($saml_groups)) {
-								update_groups($uid, $saml_groups, $samlBackend->protectedGroups, true);
-							}
-							if (isset($saml_display_name)) {
-								update_display_name($uid, $saml_display_name);
-							}
-						}
-					}
-				}
-				else {
+				if (OC_User::userExists($uid)) {
 					if ($samlBackend->updateUserData) {
 						OC_Util::setupFS($uid);
 						OC_Log::write('saml','Updating data of the user: '.$uid,OC_Log::DEBUG);
@@ -104,7 +81,7 @@ class OC_USER_SAML_Hooks {
 							update_mail($uid, $saml_email);
 						}
 						if (isset($saml_groups)) {
-							update_groups($uid, $saml_groups, $samlBackend->protectedGroups, false);
+							update_groups($uid, $saml_groups, $samlBackend->protectedGroups);
 						}
 						if (isset($saml_display_name)) {
 							update_display_name($uid, $saml_display_name);
@@ -122,11 +99,15 @@ class OC_USER_SAML_Hooks {
 		$samlBackend = new OC_USER_SAML();
 		if ($samlBackend->auth->isAuthenticated()) {
 			OC_Log::write('saml', 'Executing SAML logout', OC_Log::DEBUG);
+			# Destroy user saml token
+			unset($_COOKIE["SimpleSAMLAuthToken"]);
+			setcookie('SimpleSAMLAuthToken', '', time()-3600, \OC::$WEBROOT);
+			// old cookies might be stored under /webroot/ instead of /webroot
+			setcookie('SimpleSAMLAuthToken', '', time()-3600, \OC::$WEBROOT . '/');
 			$samlBackend->auth->logout();
 		}
 		return true;
 	}
-
 }
 
 
@@ -138,15 +119,13 @@ function update_mail($uid, $email) {
 }
 
 
-function update_groups($uid, $groups, $protectedGroups=array(), $just_created=false) {
+function update_groups($uid, $groups, $protectedGroups=array()) {
 
-	if(!$just_created) {
-		$old_groups = OC_Group::getUserGroups($uid);
-		foreach($old_groups as $group) {
-			if(!in_array($group, $protectedGroups) && !in_array($group, $groups)) {
-				OC_Group::removeFromGroup($uid,$group);
-				OC_Log::write('saml','Removed "'.$uid.'" from the group "'.$group.'"', OC_Log::DEBUG);
-			}
+	$old_groups = OC_Group::getUserGroups($uid);
+	foreach($old_groups as $group) {
+		if(!in_array($group, $protectedGroups) && !in_array($group, $groups)) {
+			OC_Group::removeFromGroup($uid,$group);
+			OC_Log::write('saml','Removed "'.$uid.'" from the group "'.$group.'"', OC_Log::DEBUG);
 		}
 	}
 
@@ -166,6 +145,7 @@ function update_groups($uid, $groups, $protectedGroups=array(), $just_created=fa
 		}
 	}
 }
+
 
 function update_display_name($uid, $displayName) {
 	OC_User::setDisplayName($uid, $displayName);
