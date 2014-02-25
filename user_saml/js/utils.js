@@ -50,7 +50,7 @@ $(document).ready(function(){
 	}).appendTo('#login-saml');
 
 
-    $('<a id="login-saml-action" href="?app=user_saml" ></a>').css(
+    $('<a id="login-saml-action" href="simplesamlphp/module.php/core/as_login.php?AuthId=default-sp&ReturnTo=https://'+escapeHTML(document.domain)+'?app=user_saml" ></a>').css(
     {
         'text-decoration': 'none'
     }).appendTo('#login-saml');
