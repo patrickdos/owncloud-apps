@@ -61,7 +61,8 @@ class OC_USER_SAML_Hooks {
 		if (!$samlBackend->updateUserData) {
 			// Ensure that user data will be filled atleast once
 			$attrs = get_user_attributes($uid, $samlBackend);
-			update_user_data($uid, $attrs['email'], $attrs['groups'], $attrs['protected_groups'], $attrs['display_name']);
+			update_user_data($uid, $attrs['email'], $attrs['groups'],
+				$attrs['protected_groups'], $attrs['display_name'], true);
 		}
 	}
 
@@ -111,14 +112,14 @@ function get_user_attributes($uid, $samlBackend) {
 }
 
 
-function update_user_data($uid, $email=null, $groups=null, $protectedGroups='', $displayName=null) {
+function update_user_data($uid, $email=null, $groups=null, $protectedGroups='', $displayName=null, $just_created=false) {
 	OC_Util::setupFS($uid);
 	OCP\Util::writeLog('saml','Updating data of the user: '.$uid, OCP\Util::DEBUG);
 	if(isset($email)) {
 		update_mail($uid, $email);
 	}
 	if (isset($groups)) {
-		update_groups($uid, $groups, $protectedGroups);
+		update_groups($uid, $groups, $protectedGroups, $just_created);
 	}
 	if (isset($displayName)) {
 		update_display_name($uid, $displayName);
@@ -134,13 +135,15 @@ function update_mail($uid, $email) {
 }
 
 
-function update_groups($uid, $groups, $protectedGroups=array()) {
-
-	$old_groups = OC_Group::getUserGroups($uid);
-	foreach($old_groups as $group) {
-		if(!in_array($group, $protectedGroups) && !in_array($group, $groups)) {
-			OC_Group::removeFromGroup($uid,$group);
-			OC_Log::write('saml','Removed "'.$uid.'" from the group "'.$group.'"', OC_Log::DEBUG);
+function update_groups($uid, $groups, $protectedGroups=array(), $just_created=false) {
+	
+	if(!$just_created) {
+		$old_groups = OC_Group::getUserGroups($uid);
+		foreach($old_groups as $group) {
+			if(!in_array($group, $protectedGroups) && !in_array($group, $groups)) {
+				OC_Group::removeFromGroup($uid,$group);
+				OC_Log::write('saml','Removed "'.$uid.'" from the group "'.$group.'"', OC_Log::DEBUG);
+			}
 		}
 	}
 
