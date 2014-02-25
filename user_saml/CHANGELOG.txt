@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+Version 0.5 (by Miroslav Bauer & Jakub Peisar @ CESNET)
+
+* Fixed broken user creation and logout on OC6 (Tested with OwnCloud 6.0.1)
+* Added form for setting password for sync clients to personal settings
+
+
 Version 0.4 (Tested with OwnCloud 5.0.8)
 ----------------------------------------
 
