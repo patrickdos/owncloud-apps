@@ -58,12 +58,18 @@ class OC_USER_SAML_Hooks {
 
 	static public function post_createUser($uid, $password) {
 		$samlBackend = new OC_USER_SAML();
+		$attrs = get_user_attributes($uid, $samlBackend);
 		if (!$samlBackend->updateUserData) {
 			// Ensure that user data will be filled atleast once
-			$attrs = get_user_attributes($uid, $samlBackend);
 			update_user_data($uid, $attrs['email'], $attrs['groups'],
 				$attrs['protected_groups'], $attrs['display_name'], true);
 		}
+		send_email('account creation', 
+			"An ownCloud account has been succesfully created for you.", array(), $attrs['email']);
+	}
+
+	static public function post_setPassword($uid, $password, $recoveryPassword) {
+		send_email('password change', "Your password has been changed.");
 	}
 
 	static public function logout($parameters) {
@@ -167,4 +173,20 @@ function update_groups($uid, $groups, $protectedGroups=array(), $just_created=fa
 
 function update_display_name($uid, $displayName) {
 	OC_User::setDisplayName($uid, $displayName);
+}
+
+
+function send_email($subject, $message, $args=array(), $user=null) {
+	$from = \OCP\Util::getDefaultEmailAddress('noreply');
+	if (!$user) {
+		$user = \OCP\Config::getUserValue(OCP\User::getUser(), 'settings', 'email', '');
+	}
+	\OCP\Util::writeLog('saml','Sending email to '. $user, OCP\Util::DEBUG);
+	$l = \OCP\Util::getL10N('saml');
+	try {
+		$defaults = new \OCP\Defaults();
+		\OCP\Util::sendMail($user, '', $l->t('%s '.$subject, array($defaults->getName())), $l->t($message, $args), $from, $defaults->getName());
+	} catch (Exception $e) {
+		\OCP\Util::writeLog('saml','Sending email to '. $user .' failed.', OC_Log::ERROR);
+	}
 }
