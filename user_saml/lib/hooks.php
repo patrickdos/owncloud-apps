@@ -43,49 +43,11 @@ class OC_USER_SAML_Hooks {
 			}
 
 			if ($usernameFound && $uid == $userid) {
-
-				$attributes = $samlBackend->auth->getAttributes();
-
-				$saml_email = '';
-				foreach ($samlBackend->mailMapping as $mailMapping) {
-					if (array_key_exists($mailMapping, $attributes) && !empty($attributes[$mailMapping][0])) {
-						$saml_email = $attributes[$mailMapping][0];
-						break;
-					}
-				}
-
-				$saml_display_name = '';
-				foreach ($samlBackend->displayNameMapping as $displayNameMapping) {
-					if (array_key_exists($displayNameMapping, $attributes) && !empty($attributes[$displayNameMapping][0])) {
-						$saml_display_name = $attributes[$displayNameMapping][0];
-						break;
-					}
-				}
-
-				$saml_groups = array();
-				foreach ($samlBackend->groupMapping as $groupMapping) {
-					if (array_key_exists($groupMapping, $attributes) && !empty($attributes[$groupMapping])) {
-						$saml_groups = array_merge($saml_groups, $attributes[$groupMapping]);
-					}
-				}
-				if (empty($saml_groups) && !empty($samlBackend->defaultGroup)) {
-					$saml_groups = array($samlBackend->defaultGroup);
-					OC_Log::write('saml','Using default group "'.$samlBackend->defaultGroup.'" for the user: '.$uid, OC_Log::DEBUG);
-				}
-
 				if (OC_User::userExists($uid)) {
 					if ($samlBackend->updateUserData) {
-						OC_Util::setupFS($uid);
-						OC_Log::write('saml','Updating data of the user: '.$uid,OC_Log::DEBUG);
-						if(isset($saml_email)) {
-							update_mail($uid, $saml_email);
-						}
-						if (isset($saml_groups)) {
-							update_groups($uid, $saml_groups, $samlBackend->protectedGroups);
-						}
-						if (isset($saml_display_name)) {
-							update_display_name($uid, $saml_display_name);
-						}
+						$attrs = get_user_attributes($uid, $samlBackend);
+						update_user_data($uid, $attrs['email'], $attrs['groups'],
+							$attrs['protected_groups'], $attrs['display_name']);
 					}
 				}
 				return true;
@@ -94,21 +56,74 @@ class OC_USER_SAML_Hooks {
 		return false;
 	}
 
+	static public function post_createUser($uid, $password) {
+		$samlBackend = new OC_USER_SAML();
+		if (!$samlBackend->updateUserData) {
+			// Ensure that user data will be filled atleast once
+			$attrs = get_user_attributes($uid, $samlBackend);
+			update_user_data($uid, $attrs['email'], $attrs['groups'], $attrs['protected_groups'], $attrs['display_name']);
+		}
+	}
 
 	static public function logout($parameters) {
 		$samlBackend = new OC_USER_SAML();
 		if ($samlBackend->auth->isAuthenticated()) {
 			OC_Log::write('saml', 'Executing SAML logout', OC_Log::DEBUG);
-			# Destroy user saml token
 			unset($_COOKIE["SimpleSAMLAuthToken"]);
 			setcookie('SimpleSAMLAuthToken', '', time()-3600, \OC::$WEBROOT);
-			// old cookies might be stored under /webroot/ instead of /webroot
 			setcookie('SimpleSAMLAuthToken', '', time()-3600, \OC::$WEBROOT . '/');
 			$samlBackend->auth->logout();
 		}
 		return true;
 	}
 }
+
+function get_user_attributes($uid, $samlBackend) {
+	$attributes = $samlBackend->auth->getAttributes();
+	$result['email'] = '';
+	foreach ($samlBackend->mailMapping as $mailMapping) {
+		if (array_key_exists($mailMapping, $attributes) && !empty($attributes[$mailMapping][0])) {
+			$result['email'] = $attributes[$mailMapping][0];
+			break;
+		}
+	}
+
+	$result['display_name'] = '';
+	foreach ($samlBackend->displayNameMapping as $displayNameMapping) {
+		if (array_key_exists($displayNameMapping, $attributes) && !empty($attributes[$displayNameMapping][0])) {
+			$result['display_name'] = $attributes[$displayNameMapping][0];
+			break;
+		}
+	}
+
+	$result['groups'] = array();
+	foreach ($samlBackend->groupMapping as $groupMapping) {
+		if (array_key_exists($groupMapping, $attributes) && !empty($attributes[$groupMapping])) {
+			$result['groups'] = array_merge($result['groups'], $attributes[$groupMapping]);
+		}
+	}
+	if (empty($result['groups']) && !empty($samlBackend->defaultGroup)) {
+		$result['groups'] = array($samlBackend->defaultGroup);
+		OCP\Util::writeLog('saml','Using default group "'.$samlBackend->defaultGroup.'" for the user: '.$uid, OCP\Util::DEBUG);
+	}
+	$result['protected_groups'] = $samlBackend->protectedGroups;
+	return $result;	
+}
+
+
+function update_user_data($uid, $email=null, $groups=null, $protectedGroups='', $displayName=null) {
+	OC_Util::setupFS($uid);
+	OCP\Util::writeLog('saml','Updating data of the user: '.$uid, OCP\Util::DEBUG);
+	if(isset($email)) {
+		update_mail($uid, $email);
+	}
+	if (isset($groups)) {
+		update_groups($uid, $groups, $protectedGroups);
+	}
+	if (isset($displayName)) {
+		update_display_name($uid, $displayName);
+	}
+}	
 
 
 function update_mail($uid, $email) {

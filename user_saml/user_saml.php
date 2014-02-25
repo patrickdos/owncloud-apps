@@ -76,8 +76,8 @@ class OC_USER_SAML extends OC_User_Backend {
 		foreach($this->usernameMapping as $usernameMapping) {
 			if (array_key_exists($usernameMapping, $attributes) && !empty($attributes[$usernameMapping][0])) {
 				$uid = $attributes[$usernameMapping][0];
-				OC_Log::write('saml','Authenticated user '.$uid,OC_Log::DEBUG);
-				if(!OC_User::userExists($uid) AND $this->autocreate) {
+				OCP\Util::writeLog('saml','Authenticated user '.$uid, OCP\Util::DEBUG);
+				if(!OCP\User::userExists($uid) && $this->autocreate) {
 					return $this->createUser($uid);
 				}
 				return $uid;
@@ -94,11 +94,11 @@ class OC_USER_SAML extends OC_User_Backend {
 
 	private function createUser($uid) {
                 if (preg_match( '/[^a-zA-Z0-9 _\.@\-]/', $uid)) {
-                        OC_Log::write('saml','Invalid username "'.$uid.'", allowed chars "a-zA-Z0-9" and "_.@-" ',OC_Log::DEBUG);
+                        OCP\Util::writeLog('saml','Invalid username "'.$uid.'", allowed chars "a-zA-Z0-9" and "_.@-" ',OCP\Util::DEBUG);
                         return false;
                 } else {
                         $random_password = \OC_Util::generateRandomBytes(64);
-                        OC_Log::write('saml','Creating new user: '.$uid, OC_Log::DEBUG);
+                        OCP\Util::writeLog('saml','Creating new user: '.$uid, OCP\Util::DEBUG);
                         OC_User::createUser($uid, $random_password);
                         return $uid;
                 }
