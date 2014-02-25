@@ -22,6 +22,9 @@
 <a target="_blank" href="<?php p($_['clients']['ios']); ?>">
 	<img src="<?php print_unescaped(OCP\Util::imagePath('core', 'appstore.png')); ?>" />
 </a>
+<h2><?php p($l->t('Set access password for sync app'));?></h2>
+<a target="_blank" class="button" href="<?php p(link_to('', 'index.php/settings/personal')) ?>">
+        <img class="appsmall appsmall-settings png" src="<?php print_unescaped(OCP\Util::imagePath('core', 'actions/settings.png')); ?>" /> <?php p($l->t('Go to app settings'));?></a>
 
 <h2><?php p($l->t('Connect your desktop apps to ownCloud'));?></h2>
 <?php if (OC_Util::getEditionString() === ''): ?>
