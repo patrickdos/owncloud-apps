@@ -24,3 +24,13 @@
     width: 15em;
 }
 
+#cpasswordchanged {
+    font-weight: bold;
+    color: green;
+}
+
+#cpassworderror {
+    font-weight: bold;
+    color: red;
+}
+
