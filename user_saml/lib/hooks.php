@@ -136,7 +136,7 @@ function update_mail($uid, $email) {
 
 
 function update_groups($uid, $groups, $protectedGroups=array(), $just_created=false) {
-	
+
 	if(!$just_created) {
 		$old_groups = OC_Group::getUserGroups($uid);
 		foreach($old_groups as $group) {

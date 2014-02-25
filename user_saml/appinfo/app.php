@@ -35,6 +35,8 @@ if (OCP\App::isEnabled('user_saml')) {
 	require_once 'user_saml/user_saml.php';
 
 	OCP\App::registerAdmin('user_saml', 'settings');
+	OCP\App::registerPersonal('user_saml', 'settings_personal');
+
 
 	// register user backend
 	OC_User::useBackend( 'SAML' );
