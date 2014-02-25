@@ -35,7 +35,7 @@ $(document).ready(function(){
 		'-moz-border-radius' : '15px'
 	}).appendTo('#login-saml-action');
 
-	var termsLink = '<a href="https://du.cesnet.cz/wiki/doku.php/cs/provozni_pravidla">'+escapeHTML(t('user_saml','terms of use'))+'</a>'
+	var termsLink = '<a href="https://du.cesnet.cz/wiki/doku.php/cs/provozni_pravidla"> '+escapeHTML(t('user_saml','terms of use'))+'</a>'
 	var legalNotice = t("user_saml", "By logging in you agree with")+termsLink;
 	$('<p class="info"></p>').appendTo('#login-saml').html(legalNotice);
 });
