@@ -43,12 +43,10 @@ class OC_USER_SAML_Hooks {
 			}
 
 			if ($usernameFound && $uid == $userid) {
-				if (OC_User::userExists($uid)) {
-					if ($samlBackend->updateUserData) {
-						$attrs = get_user_attributes($uid, $samlBackend);
-						update_user_data($uid, $attrs['email'], $attrs['groups'],
-							$attrs['protected_groups'], $attrs['display_name']);
-					}
+				if ($samlBackend->updateUserData) {
+					$attrs = get_user_attributes($uid, $samlBackend);
+					update_user_data($uid, $attrs['email'], $attrs['groups'],
+						$attrs['protected_groups'], $attrs['display_name']);
 				}
 				return true;
 			}
@@ -56,7 +54,8 @@ class OC_USER_SAML_Hooks {
 		return false;
 	}
 
-	static public function post_createUser($uid, $password) {
+	static public function post_createUser($parameters) {
+		$uid = $parameters['uid'];
 		$samlBackend = new OC_USER_SAML();
 		if (!$samlBackend->updateUserData) {
 			// Ensure that user data will be filled atleast once
