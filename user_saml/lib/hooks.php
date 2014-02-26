@@ -56,8 +56,8 @@ class OC_USER_SAML_Hooks {
 		return false;
 	}
 
-	static public function post_createUser($params) {
-		$uid = $params['uid'];
+	static public function post_createUser($parameters) {
+		$uid = $parameters['uid'];
 		$samlBackend = new OC_USER_SAML();
 		$attrs = get_user_attributes($uid, $samlBackend);
 		if (!$samlBackend->updateUserData) {
@@ -65,18 +65,19 @@ class OC_USER_SAML_Hooks {
 			update_user_data($uid, $attrs['email'], $attrs['groups'],
 				$attrs['protected_groups'], $attrs['display_name'], true);
 		}
-		$message = "An ownCloud account at Data Storage CESNET has been succesfully created for you.\r\n\r\n"
+		$message = "An ownCloud account at Data Storage CESNET (%s) has been succesfully created for you.\r\n\r\n"
 			. "Details about your account:\r\nUsername: %s\r\nData quota: %s\r\n\r\nIf you wish to use "
 			. "synchronization client apps, please set your password here:\r\n%s\r\n\r\nYour account is"
 			. " bound to Identity Provider used at first login. If you have identities at multiple IdP's,"
 			. " always use your identity used at first login (%s) in order to access your data.\r\n\r\nIf"
 			. " you have questions or problems, feel free to contact us at du-support@cesnet.cz.";
+		$domain = \OCP\Util::linkToAbsolute('index.php','');
 		$quota = OCP\Util::humanFileSize(OC_Util::getUserQuota($uid));
 		$psettings = \OCP\Util::linkToAbsolute('index.php', 'settings/personal');
 		$manpage1 = 'https://du.cesnet.cz/wiki/doku.php/cs/navody/owncloud/';
 		$manpage2 = \OC_Helper::linkToDocs('user-manual');
 		send_email('account creation', $message, 
-			array($uid, $quota, $psettings, $uid, $manpage1, $manpage2), $attrs['email']);
+			array($domain, $uid, $quota, $psettings, $uid, $manpage1, $manpage2), $attrs['email']);
 	}
 
 	static public function post_setPassword($uid, $password, $recoveryPassword) {
