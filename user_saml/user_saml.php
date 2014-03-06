@@ -37,6 +37,8 @@ class OC_USER_SAML extends OC_User_Backend {
 	public $groupMapping;
 	public $auth;
 
+	private $consolidatorBackends;
+
 
 	public function __construct() {
 		$this->sspPath = OCP\Config::getAppValue('user_saml', 'saml_ssp_path', '');
@@ -77,7 +79,26 @@ class OC_USER_SAML extends OC_User_Backend {
 			if (array_key_exists($usernameMapping, $attributes) && !empty($attributes[$usernameMapping][0])) {
 				$uid = $attributes[$usernameMapping][0];
 				OCP\Util::writeLog('saml','Authenticated user '.$uid, OCP\Util::DEBUG);
+
 				if(!OCP\User::userExists($uid) && $this->autocreate) {
+					$similar = OC_USER_SAML_Consolidator::getSimilarIdentities(
+						$uid, $this->getSamlDisplayName($attributes));
+					OCP\Util::writeLog('user_saml','Similar users for '.$uid.':'.var_export($similar,TRUE),OCP\Util::DEBUG);
+					if (!empty($similar)) {
+						if (!isset($_COOKIE['oc_consolidated'])) {
+							OCP\Util::writeLog('user_saml','redir:'
+								.OCP\Util::linkToAbsolute('public.php','',array('service'=>'consolidator')),OCP\Util::DEBUG);
+
+							$userlist = base64_encode(http_build_query($similar));
+							header('Location: '.OCP\Util::linkToAbsolute('public.php','',
+								array('service'=>'consolidator','t'=>$userlist)));
+							exit();
+						} else {
+							unset($_COOKIE['oc_consolidated']);
+							setcookie('oc_consolidated', '', time()-3600, \OC::$WEBROOT);
+							setcookie('oc_consolidated', '', time()-3600, \OC::$WEBROOT.'/');
+						}
+					}
 					return $this->createUser($uid);
 				}
 				return $uid;
@@ -103,4 +124,14 @@ class OC_USER_SAML extends OC_User_Backend {
                         return $uid;
                 }
         }
+	
+	public function getSamlDisplayName($attributes) {
+		foreach ($this->displayNameMapping as $displayNameMapping) {
+			if (array_key_exists($displayNameMapping, $attributes) &&
+				!empty($attributes[$displayNameMapping][0])) {
+				
+				return $attributes[$displayNameMapping][0];
+			}
+		}
+	}
 }

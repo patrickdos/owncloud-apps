@@ -1,0 +1,19 @@
+#accountsWrap { width: 100%; margin: 10px auto;}
+#accountsList { margin-left: auto; margin-right: auto; border-radius: 10px; overflow: hidden;
+  -moz-border-radius: 10px; -webkit-border-radius: 10px; -webkit-background-clip:padding-box;
+   background-color:#fff; padding:10px; display:block;}
+#note { color: #bbb; font-style: italic; margin-bottom: 20px; }
+.accountInfo { padding-bottom: 10px;}
+#back { float: left; }
+
+
+td.username { color: #667; font-size: 90%; }
+
+h2 { font-weight: bolder; font-size:110%; color: #cff; margin: 10px;}
+td {border-bottom: 1px solid #bbb; padding-right: 5px; }
+tr { padding: 5px 10px; height: 42px; background: #fff; border-bottom: 1px solid #bbb; line-height:42px; }
+tr:first-child {border-radius: 9px 9px 0 0; -moz-border-radius: 9px 9px 0 0; -webkit-border-radius: 9px 9px 0 0;-webkit-background-clip:padding-box }
+tr:last-child {border:none;border-radius: 0 0 9px 9px; -moz-border-radius: 0 0 9px 9px; -webkit-border-radius: 0 0 9px 9px;-webkit-background-clip:padding-box }
+tr:last-child td {border:none }
+tr.border_bottom td { border-bottom:1px solid #bbb; }
+

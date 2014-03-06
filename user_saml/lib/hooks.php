@@ -72,7 +72,8 @@ class OC_USER_SAML_Hooks {
 			unset($_COOKIE["SimpleSAMLAuthToken"]);
 			setcookie('SimpleSAMLAuthToken', '', time()-3600, \OC::$WEBROOT);
 			setcookie('SimpleSAMLAuthToken', '', time()-3600, \OC::$WEBROOT . '/');
-			$samlBackend->auth->logout();
+			$samlBackend->auth->logout(
+				OCP\Util::linkToAbsolute('','index.php',array('logout'=>'true')));
 		}
 		return true;
 	}
@@ -88,13 +89,7 @@ function get_user_attributes($uid, $samlBackend) {
 		}
 	}
 
-	$result['display_name'] = '';
-	foreach ($samlBackend->displayNameMapping as $displayNameMapping) {
-		if (array_key_exists($displayNameMapping, $attributes) && !empty($attributes[$displayNameMapping][0])) {
-			$result['display_name'] = $attributes[$displayNameMapping][0];
-			break;
-		}
-	}
+	$result['display_name'] = $samlBackend->getSamlDisplayName($attributes);
 
 	$result['groups'] = array();
 	foreach ($samlBackend->groupMapping as $groupMapping) {

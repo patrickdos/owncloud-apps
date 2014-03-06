@@ -34,6 +34,10 @@ if (OCP\App::isEnabled('user_saml')) {
 
 	require_once 'user_saml/user_saml.php';
 
+	if (!OCP\CONFIG::getAppValue('core', 'public_consolidator')) {
+		OCP\CONFIG::setAppValue('core', 'public_consolidator','user_saml/consolidator.php');
+	}
+
 	OCP\App::registerAdmin('user_saml', 'settings');
 	OCP\App::registerPersonal('user_saml', 'settings_personal');
 
@@ -42,6 +46,7 @@ if (OCP\App::isEnabled('user_saml')) {
 	OC_User::useBackend( 'SAML' );
 
 	OC::$CLASSPATH['OC_USER_SAML_Hooks'] = 'user_saml/lib/hooks.php';
+	OC::$CLASSPATH['OC_USER_SAML_Consolidator'] = 'user_saml/lib/consolidator.php';
 	OCP\Util::connectHook('OC_User', 'post_createUser', 'OC_USER_SAML_Hooks', 'post_createUser');
 	OCP\Util::connectHook('OC_User', 'post_login', 'OC_USER_SAML_Hooks', 'post_login');
 	OCP\Util::connectHook('OC_User', 'logout', 'OC_USER_SAML_Hooks', 'logout');

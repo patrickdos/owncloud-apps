@@ -6,6 +6,7 @@
 	<licence>AGPL</licence>
 	<author>Sixto Martin @ Yaco Sistemas</author>
 	<require>5</require>
+	<public><consolidator>consolidator.php</consolidator></public>
 	<types>
         <prelogin/>
         <authentication/>
